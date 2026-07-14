@@ -10,7 +10,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} /> {/* واجهة الزبائن */}
-        <Route path="/admin" element={<Admin />} /> {/* لوحة التحكم */}
+        <Route path="/iamnoor98naem" element={<Admin />} /> {/* لوحة التحكم */}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
