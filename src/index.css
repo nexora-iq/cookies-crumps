@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
+
+/* --- هذا هو السحر اللي يمنع انهيار الموقع ويخفي المربع الأزرق --- */
+*, *::before, *::after {
+  box-sizing: border-box; /* يجبر العناصر تلتزم بعرض الشاشة وما تطلع برا */
+  -webkit-tap-highlight-color: transparent; /* يخفي المربع الأزرق المزعج عند اللمس */
+  outline: none; /* يمنع ظهور أي حدود زرقاء عند الضغط */
+}
+
+:root {
+  --bg-color: #F7F1E8;
+  --dark-brown: #4B2D1F;
+  --gold: #C98A47;
+  --caramel: #D7A66A;
+}
+
+html {
+  font-size: 13.5px; 
+  width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden; /* يمنع حركة الشاشة يمنة ويسرى */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--dark-brown);
+  direction: rtl;
+  width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden; 
+}
+
+/* --- تصميم الهيدر --- */
+.main-header {
+  padding: 15px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: 0;
+  background-color: #F7F1E8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.nav-links {
+  display: flex;
+  gap: 25px;
+  font-weight: 700;
+  color: var(--dark-brown);
+}
+
+.nav-links span {
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.nav-links span:hover {
+  background-color: var(--bg-color);
+  color: var(--gold);
+}
+
+/* --- تصميم الأزرار (الرئيسية) --- */
+.btn-primary, .btn-secondary {
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Cairo', sans-serif;
+}
+.btn-primary {
+  background-color: var(--dark-brown);
+  color: white;
+  border: none;
+  box-shadow: 0 8px 15px rgba(75, 45, 31, 0.2);
+}
+.btn-primary:hover {
+  background-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(201, 138, 71, 0.3);
+}
+.btn-secondary {
+  background-color: white;
+  color: var(--dark-brown);
+  border: 2px solid var(--dark-brown);
+}
+.btn-secondary:hover {
+  background-color: var(--dark-brown);
+  color: white;
+  transform: translateY(-3px);
+}
+
+/* --- شاشة الترحيب --- */
+.welcome-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100dvh;
+  background-color: var(--bg-color); z-index: 99999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.5s ease;
+}
+.welcome-logo {
+  width: 220px; opacity: 0; transform: scale(0.8) translateY(20px);
+  animation: smoothAppear 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulseContinuous 2s ease-in-out infinite 1s; 
+  margin-bottom: 20px;
+}
+@keyframes smoothAppear { to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes pulseContinuous { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+.typewriter-text { font-size: 2.5rem; color: var(--dark-brown); font-weight: 800; min-height: 60px; text-align: center; }
+
+/* --- اللوحة الإعلانية --- */
+.billboard-container {
+  position: relative; width: 100%; max-width: 1200px;
+  margin: 0 auto 30px auto; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 15px 30px rgba(75, 45, 31, 0.2); background-color: #000;
+  aspect-ratio: 16 / 9; cursor: pointer; touch-action: pan-y; user-select: none;
+}
+.progress-container { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; gap: 6px; z-index: 10; }
+.progress-bar-bg { flex: 1; height: 4px; background-color: rgba(255, 255, 255, 0.4); border-radius: 4px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background-color: #fff; width: 0%; transition: width 0.1s linear; }
+.billboard-media { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+/* --- حاوية الهيدر والشريط الإخباري --- */
+.sticky-wrapper { position: sticky; top: 0; z-index: 1000; display: flex; flex-direction: column; width: 100%; }
+.news-ticker { background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); padding: 8px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid rgba(75, 45, 31, 0.1); direction: ltr; width: 100%; }
+.news-ticker-content { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; color: var(--dark-brown); font-weight: 700; font-size: 1.05rem; }
+@keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+/* --- نافذة الشراء --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+.modal-content { background-color: var(--bg-color); width: 90%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; position: relative; }
+.modal-close { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--dark-brown); }
+.form-group { margin-bottom: 15px; text-align: right; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark-brown); }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-family: 'Cairo', sans-serif; }
+.order-summary { background-color: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--gold); }
+.note-warning { background-color: #ffe8e8; color: #d93025; padding: 10px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; text-align: center; margin-bottom: 20px; }
+
+/* --- أنيميشن التاج (للوحة التحكم) --- */
+.crown-animation-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--dark-brown); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gold); }
+.crown-icon { font-size: 6rem; animation: crownPulse 2s ease-in-out forwards; }
+@keyframes crownPulse { 0% { transform: scale(0.5) translateY(50px); opacity: 0; } 50% { transform: scale(1.2) translateY(-20px); opacity: 1; filter: drop-shadow(0 0 30px var(--gold)); } 100% { transform: scale(1) translateY(0); opacity: 1; filter: drop-shadow(0 0 15px var(--gold)); } }
+.admin-welcome-text { font-family: 'Cairo', sans-serif; font-size: 2rem; font-weight: bold; margin-top: 20px; opacity: 0; animation: fadeInText 1s ease forwards 1s; }
+@keyframes fadeInText { to { opacity: 1; } }
+
+/* ========================================= */
+/* --- تعديلات الموبايل النهائية (إصلاح الميلان) --- */
+/* ========================================= */
+@media (max-width: 768px) {
+  #products > div:not(.modal-overlay), .features-container { 
+    display: grid !important; 
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 10px !important; 
+    width: 100% !important; 
+    padding: 0 !important; 
+  }
+  .cookie-hover, .feature-card { padding: 10px 10px !important; min-width: 0 !important; }
+  .cookie-hover img { max-height: 1200px !important; }
+  
+  .main-header { 
+    flex-direction: column; 
+    padding: 10px 15px !important; 
+    gap: 15px; 
+    position: relative !important; 
+    top: auto !important; 
+    width: 100%;
+  }
+  
+  .nav-links {
+  display: flex;
+  align-items: center; /* توسيط العناصر عمودياً حتى ماكو شيء يصعد وينزل */
+  gap: 0px;
+  font-weight: 700;
+  color: var(--dark-brown);
+}
+
+.nav-links span {
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  white-space: nowrap; /* هذا السطر السحري يمنع الكلمات من النزول لسطر ثاني */
+  display: inline-block;
+}
+  
+  /* الفوتر */
+  #footer { width: 100%; overflow: hidden; padding: 40px 15px 20px !important; }
+  #footer > div:nth-of-type(2) { display: grid !important; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+  
+  .billboard-container { aspect-ratio: 4 / 3; width: 100%; border-radius: 15px; }
+  .typewriter-text { font-size: 1.6rem !important; }
+}
+/* إجبار رسائل التنبيه على الظهور فوق نافذة السلة */
+.swal2-container {
+  z-index: 999999 !important;
+}
+/* منع تحديد النصوص والنسخ */
+* {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* استثناء حقول الإدخال في لوحة الأدمن لكي تتمكن من الكتابة */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* منع سحب وتحميل الصور تماماً */
+img {
+  pointer-events: none !important;
+  -webkit-user-drag: none !important;
+}
