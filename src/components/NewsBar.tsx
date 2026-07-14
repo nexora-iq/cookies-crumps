@@ -27,7 +27,7 @@ export default function NewsBar({ lang }: { lang: string }) {
       } else {
         setNews(
           lang === 'ar' 
-            ? 'صاير ببالك شي حلو ويدفي قلبك ؟ الكوكيز مالتنا ينتظرك🤎'
+            ? 'صاير ببالك شي حلو ويدفي قلبك ؟ الكوكيز مالتنا ينتظرك'
             : 'Craving something sweet to warm your heart? Our cookies are waiting for you🤎'
         );
       }

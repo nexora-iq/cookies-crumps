@@ -37,16 +37,22 @@ export default function Admin() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // === التحديث هنا: التحقق من حالة تسجيل الدخول عبر نظام Supabase Auth الحقيقي ===
-  useEffect(() => {
+ useEffect(() => {
+    // 1. فحص هل يوجد مستخدم مسجل مسبقاً في المتصفح
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) setIsLoggedIn(true);
+      
+      if (session) {
+        setIsLoggedIn(true); // إذا اكو جلسة، افتح اللوحة
+      } else {
+        setIsLoggedIn(false); // إذا ماكو، ابقى بصفحة تسجيل الدخول
+      }
     };
+    
     checkSession();
 
-    // مراقبة أي تغيير في حالة الدخول/الخروج
-    const { data: authListener } = supabase.auth.onAuthStateChange(( session) => {
+    // 2. مراقبة أي تغيير في حالة الدخول/الخروج (في حال سجلت خروج)
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(!!session);
     });
 
@@ -54,7 +60,6 @@ export default function Admin() {
       authListener.subscription.unsubscribe();
     };
   }, []);
-
   // === التحديث هنا: دالة تسجيل الدخول الرسمية ===
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
