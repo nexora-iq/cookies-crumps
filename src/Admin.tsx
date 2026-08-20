@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import { FaCrown, FaChartPie, FaBoxOpen, FaClipboardList, FaMoneyCheckAlt, FaImage, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+import {
+  FaCrown,
+  FaChartPie,
+  FaBoxOpen,
+  FaClipboardList,
+  FaMoneyCheckAlt,
+  FaImage,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+  FaCalculator
+} from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 import ProductsTab from './components/ProductsTab';
+import { enablePushNotifications } from './notificationService';
 import StatsTab from './components/StatsTab';
 import OrdersTab from './components/OrdersTab';
 import FinancialsLogsTab from './components/FinancialsLogsTab';
 import MediaNewsTab from './components/MediaNewsTab';
+import CostsRecipesTab from './components/CostsRecipesTab';
 
 import './index.css';
 
@@ -18,6 +31,96 @@ export default function Admin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('products');
+
+  // صوت وصول الطلب الجديد داخل لوحة الإدارة
+  const orderSoundRef = React.useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // تجهيز الصوت بعد أول تفاعل مع الصفحة لتقليل مشاكل autoplay في المتصفحات
+    const unlockAudio = () => {
+      if (!orderSoundRef.current) {
+        orderSoundRef.current = new Audio('/new-order.mp3');
+        orderSoundRef.current.preload = 'auto';
+        orderSoundRef.current.volume = 0.9;
+      }
+
+      const audio = orderSoundRef.current;
+      if (audio) {
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+        }).catch(() => {
+          audio.muted = false;
+        });
+      }
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
+  // مراقبة الطلبات الجديدة مباشرة من Supabase Realtime
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const channel = supabase
+      .channel('admin-new-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+        },
+        async (payload) => {
+          const order = payload.new as any;
+
+          try {
+            if (!orderSoundRef.current) {
+              orderSoundRef.current = new Audio('/new-order.mp3');
+              orderSoundRef.current.preload = 'auto';
+              orderSoundRef.current.volume = 0.9;
+            }
+
+            orderSoundRef.current.currentTime = 0;
+            await orderSoundRef.current.play();
+          } catch (error) {
+            console.warn('تعذر تشغيل صوت الطلب الجديد:', error);
+          }
+
+          const customerName = order.customer_name || 'زبون جديد';
+          const total = Number(order.total_price || 0).toLocaleString('ar-IQ');
+
+          Swal.fire({
+            icon: 'info',
+            title: '🍪 وصل طلب جديد!',
+            html: `<strong>${customerName}</strong><br/>المبلغ: <strong>${total} د.ع</strong>`,
+            confirmButtonText: 'فتح الطلبات',
+            confirmButtonColor: '#4B2D1F',
+            toast: true,
+            position: 'top-end',
+            timer: 10000,
+            timerProgressBar: true,
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('فشل الاتصال بمراقبة الطلبات الجديدة عبر Supabase Realtime');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLoggedIn]);
 
   // حالتين للتحكم بالقائمة الجانبية واستجابتها
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -82,7 +185,25 @@ export default function Admin() {
       }, 3500);
     }
   };
+const handleEnableNotifications = async () => {
+  const result = await enablePushNotifications();
 
+  if (result.success) {
+    Swal.fire({
+      icon: 'success',
+      title: 'تم تفعيل الإشعارات 🔔',
+      text: 'هذا الجهاز سيستلم إشعارات الطلبات الجديدة.',
+      confirmButtonColor: '#4B2D1F',
+    });
+  } else {
+    Swal.fire({
+      icon: 'error',
+      title: 'تعذر تفعيل الإشعارات',
+      text: result.error,
+      confirmButtonColor: '#4B2D1F',
+    });
+  }
+};
   // === التحديث هنا: دالة تسجيل الخروج الرسمية ===
   const handleLogout = async () => {
     await supabase.from('system_logs').insert([{ action_type: 'تسجيل خروج', description: 'تم تسجيل خروج المدير من النظام' }]);
@@ -133,12 +254,13 @@ export default function Admin() {
   }
 
   const navItems = [
-    { id: 'stats', label: 'الإحصائيات', icon: <FaChartPie /> },
-    { id: 'products', label: 'المنتجات', icon: <FaBoxOpen /> },
-    { id: 'orders', label: 'الطلبات', icon: <FaClipboardList /> },
-    { id: 'media', label: 'اللوحة والأخبار', icon: <FaImage /> },
-    { id: 'financials', label: 'المالية والسجل', icon: <FaMoneyCheckAlt /> },
-  ];
+  { id: 'stats', label: 'الإحصائيات', icon: <FaChartPie /> },
+  { id: 'products', label: 'المنتجات', icon: <FaBoxOpen /> },
+  { id: 'orders', label: 'الطلبات', icon: <FaClipboardList /> },
+  { id: 'costs', label: 'التكاليف والوصفات', icon: <FaCalculator /> },
+  { id: 'media', label: 'اللوحة والأخبار', icon: <FaImage /> },
+  { id: 'financials', label: 'المالية والسجل', icon: <FaMoneyCheckAlt /> },
+];
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--bg-color)', direction: 'rtl', position: 'relative' }}>
@@ -257,11 +379,29 @@ export default function Admin() {
           <h2 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--dark-brown)', fontWeight: 'bold' }}>
             لوحة الإدارة الملكية
           </h2>
+          <button
+    onClick={handleEnableNotifications}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      backgroundColor: 'var(--gold)',
+      color: '#fff',
+      border: 'none',
+      padding: '10px 15px',
+      borderRadius: '10px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }}
+  >
+    🔔 تفعيل الإشعارات
+  </button>
         </header>
 
         <main style={{ flex: 1, padding: isMobile ? '20px' : '40px', overflowY: 'auto', height: '100%' }}>
           {activeTab === 'products' && <ProductsTab />}
           {activeTab === 'stats' && <StatsTab />} 
+          {activeTab === 'costs' && <CostsRecipesTab />}
           {activeTab === 'orders' && <OrdersTab />} 
           {activeTab === 'media' && <MediaNewsTab />}
           {activeTab === 'financials' && <FinancialsLogsTab />} 
