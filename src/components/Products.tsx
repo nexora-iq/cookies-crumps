@@ -20,12 +20,10 @@ export default function Products({ onAddToCart, lang }: { onAddToCart: (product:
     checkout: lang === 'ar' ? 'اتمام الطلب' : 'Checkout Order',
     notesList: lang === 'ar' 
       ? [
-          '⚠️ الطلب يكون قبل يوم حصراً',
-          '⚠️ يحق للزبون الغاء الطلب في يوم الحجز فقط'
+          '⚠️ الطلب يكون قبل 3 ساعات  حصراً',
         ]
       : [
-          '⚠️ Orders must be placed a day in advance',
-          '⚠️ The customer can cancel the order only within the day of order creation'
+          '⚠️ Orders must be placed 3 hours in advance',
         ],
     fullName: lang === 'ar' ? 'الاسم الكامل' : 'Full Name',
     phone: lang === 'ar' ? 'رقم الهاتف' : 'Phone Number',
