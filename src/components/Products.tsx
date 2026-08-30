@@ -76,7 +76,6 @@ export default function Products({ onAddToCart, lang }: { onAddToCart: (product:
   const productTotal = selectedProduct ? selectedProduct.price * quantity : 0;
   const grandTotal = productTotal + deliveryFee;
 
-  // دالة صغيرة لاختيار الاسم حسب اللغة
   const getDisplayTitle = (product: Product) => {
     return lang === 'en' && product.title_en ? product.title_en : product.title;
   };
@@ -113,7 +112,7 @@ export default function Products({ onAddToCart, lang }: { onAddToCart: (product:
     
     const orderItems = [{
       product_id: selectedProduct?.id,
-      title: selectedProduct?.title, // نرسل الاسم العربي للإدارة حتى لو طلب بالانجليزي
+      title: selectedProduct?.title,
       price: selectedProduct?.price,
       quantity: quantity
     }];
@@ -133,6 +132,35 @@ export default function Products({ onAddToCart, lang }: { onAddToCart: (product:
       console.error(error);
       Swal.fire({ icon: 'error', title: lang === 'ar' ? 'خطأ' : 'Error', text: t.error, confirmButtonColor: '#4B2D1F' });
     } else {
+      
+     const telegramToken = import.meta.env.VITE_TELEGRAM_TOKEN;
+const chatId = import.meta.env.VITE_CHAT_ID;
+      // تنسيق الرسالة اللي راح توصلك
+      const telegramMessage = `
+🚨 *طلب جديد من الموقع!* 🚨
+
+👤 *الاسم:* ${name}
+📱 *الهاتف:* ${phone}
+📍 *العنوان:* ${address}
+
+🍪 *المنتج:* ${selectedProduct?.title}
+📦 *العدد:* ${quantity} بوكس
+💰 *المبلغ الكلي:* ${grandTotal.toLocaleString()} دينار
+
+📝 *ملاحظات:* ${orderNotes ? orderNotes : 'لا توجد'}
+      `;
+
+      fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: telegramMessage,
+          parse_mode: 'Markdown'
+        }),
+      }).catch(err => console.error("Telegram Notification Error:", err));
+      // --- نهاية كود إرسال إشعار التيليجرام ---
+
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false); setSelectedProduct(null);
