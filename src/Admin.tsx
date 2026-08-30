@@ -32,6 +32,96 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('products');
 
+  // صوت وصول الطلب الجديد داخل لوحة الإدارة
+  const orderSoundRef = React.useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // تجهيز الصوت بعد أول تفاعل مع الصفحة لتقليل مشاكل autoplay في المتصفحات
+    const unlockAudio = () => {
+      if (!orderSoundRef.current) {
+        orderSoundRef.current = new Audio('/new-order.mp3');
+        orderSoundRef.current.preload = 'auto';
+        orderSoundRef.current.volume = 0.9;
+      }
+
+      const audio = orderSoundRef.current;
+      if (audio) {
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+        }).catch(() => {
+          audio.muted = false;
+        });
+      }
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
+  // مراقبة الطلبات الجديدة مباشرة من Supabase Realtime
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const channel = supabase
+      .channel('admin-new-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+        },
+        async (payload) => {
+          const order = payload.new as any;
+
+          try {
+            if (!orderSoundRef.current) {
+              orderSoundRef.current = new Audio('/new-order.mp3');
+              orderSoundRef.current.preload = 'auto';
+              orderSoundRef.current.volume = 0.9;
+            }
+
+            orderSoundRef.current.currentTime = 0;
+            await orderSoundRef.current.play();
+          } catch (error) {
+            console.warn('تعذر تشغيل صوت الطلب الجديد:', error);
+          }
+
+          const customerName = order.customer_name || 'زبون جديد';
+          const total = Number(order.total_price || 0).toLocaleString('ar-IQ');
+
+          Swal.fire({
+            icon: 'info',
+            title: '🍪 وصل طلب جديد!',
+            html: `<strong>${customerName}</strong><br/>المبلغ: <strong>${total} د.ع</strong>`,
+            confirmButtonText: 'فتح الطلبات',
+            confirmButtonColor: '#4B2D1F',
+            toast: true,
+            position: 'top-end',
+            timer: 10000,
+            timerProgressBar: true,
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('فشل الاتصال بمراقبة الطلبات الجديدة عبر Supabase Realtime');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLoggedIn]);
+
   // حالتين للتحكم بالقائمة الجانبية واستجابتها
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
